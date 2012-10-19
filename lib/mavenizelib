@@ -1,0 +1,240 @@
+#!/bin/bash
+#
+#
+# Authors:
+#   Gabriele Giammatteo - gabriele.giammatteo@eng.it
+#
+# 2012
+#
+
+CLASSPATH=`cat $MAVENIZER_HOME/classpath.txt`:$MAVENIZER_HOME/target/classes
+
+log_debug() {
+	if [ ${FLAGS_loglevel} -ge 2 ]; then
+		echo "[$SCRIPT_NAME][DEBUG] $@"
+	fi
+}
+
+log_info() {
+	if [ ${FLAGS_loglevel} -ge 1 ]; then
+		echo "[$SCRIPT_NAME][INFO] $@"
+	fi
+}
+
+log_error() {
+	echo "[$SCRIPT_NAME][ERROR] $@"
+}
+
+log_fatal() {
+	echo "[$SCRIPT_NAME][FATAL] $@"
+}
+
+
+auto_select_artifact() {
+	log_debug "Trying to automatically select artifact file:"
+	log_debug "    searching directory: $ARTIFACT_SEARCHING_DIR"
+	for i in `find $ARTIFACT_SEARCHING_DIR -type f -name "*.jar" -o -name "*.war" -o -name "*.gar"`; do
+		#this check guarantees that the cycle is executed extactly one time
+		if [ -n "$ARTIFACT_FILE" ]; then
+			log_fatal "    auto_select_artifact() found multiple artifact, at least:"
+			log_fatal "      - $ARTIFACT_FILE"
+			log_fatal "      - $i"
+			log_fatal "    exiting ..."
+			if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+				exit 3
+			else
+				exit 0
+			fi
+		fi
+		ARTIFACT_FILE=$i
+		log_debug  "    artifact found: $ARTIFACT_FILE"
+	done
+}
+
+
+
+execute_ProfileUpdater(){
+	log_info "Calling ProfileUpdater with parameters $@"
+	if [ ${FLAGS_dryrun} -eq ${FLAGS_TRUE} ]; then
+		log_info "in simulation mode, skipping ProfileUpdater execution... "
+	else
+		java -cp $CLASSPATH org.gcube.buildutils.mavenizer.ProfileUpdater $@
+		EXIT_CODE=`echo $?`
+		log_debug "ProfileUpdater exit status: $EXIT_CODE"
+		if [ $EXIT_CODE -ne 0 ]; then
+			log_fatal "exiting due to previous errors..."
+			if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+				exit $EXIT_CODE
+			else
+				exit 0
+			fi
+		fi
+	fi
+}
+
+
+execute_PomGenerator(){
+	log_info "Calling PomGenerator with parameters $@"
+	if [ ${FLAGS_dryrun} -eq ${FLAGS_TRUE} ]; then
+		log_info "in simulation mode, skipping PomGenerator execution... "
+	else		
+		java -cp $CLASSPATH org.gcube.buildutils.mavenizer.PomGenerator $@
+		EXIT_CODE=`echo $?`
+		log_debug "PomGenerator exit status: $EXIT_CODE"
+		if [ $EXIT_CODE -ne 0 ]; then
+	    	log_debug "PomGenerator exit with status: $EXIT_CODE"
+			log_fatal "exiting due to previous errors..."
+			if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+				exit $EXIT_CODE
+			else
+				exit 0
+			fi
+		fi
+	fi
+}
+
+
+#
+# $1 artifact file
+# $2 pom file
+# $3 packaging
+# $4 classifier
+#
+execute_mvn(){
+
+	######################
+	# prepare mvn commandline
+	#
+	if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+		maven_repo_id=gcube-snapshots
+		maven_repo_url=$MAVEN_GCUBE_SNAPSHOTS
+	elif [[ "$MAVEN_BUILD_TYPE" == "candidate" ]]; then
+		maven_repo_id=gcube-staging
+		maven_repo_url=$MAVEN_GCUBE_STAGING
+	else
+		maven_repo_id=gcube-releases
+		maven_repo_url=$MAVEN_GCUBE_RELEASES
+	fi
+	
+	MVN_GOAL="install:install-file deploy:deploy-file"
+
+	
+	if [[ "$MAVEN_BUILD_TYPE" == "release" ]]; then
+			#check whether the artifact is already deployed or not
+			if [ ! -z $3 ]; then
+				EXTENSION="--extension $3"
+			fi
+			if [ ! -z $4 ]; then
+				CLASSIFIER="--classifier $4"
+			fi
+			
+			if [ ! -z "$GROUP_ID" -a ! -z "$ARTIFACT_ID" -a ! -z "$VERSION" ]; then
+				COORD_OPTS="--groupid $GROUP_ID --artifactid $ARTIFACT_ID --version $VERSION"
+			else
+				COORD_OPTS="--pom $2"
+			fi
+	
+			POM_URL="${MAVEN_GCUBE_RELEASES}`java -cp $CLASSPATH org.gcube.buildutils.mavenizer.RepoPathCalculator $COORD_OPTS $CLASSIFIER $EXTENSION`"
+			log_debug "pom url: $POM_URL"
+			ALREADY_DEPLOYED=`wget --no-cache -q -O/dev/null $POM_URL && echo 1`
+			if [ -n "$ALREADY_DEPLOYED" ]; then
+				echo "[mavenize] Skipping deploy because artifact is already deployed"
+				MVN_GOAL="install:install-file"
+			fi
+	fi
+	
+	if [ ! -z $3 ]; then
+		PACKAGING="-Dpackaging=$3"
+	fi
+	if [ ! -z $4 ]; then
+		CLASSIFIER="-Dclassifier=$4"
+	fi
+	
+	if [ ! -z "$GROUP_ID" -a ! -z "$ARTIFACT_ID" -a ! -z "$VERSION" ]; then
+		COORD_OPTS="-DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION -DgeneratePom=false"
+		log_info "Using maven coordinates $GROUP_ID:$ARTIFACT_ID:$VERSION"
+	else
+		COORD_OPTS="-DpomFile=$2"
+	fi
+	
+
+	# If file is gar, we have to deploy two files: the jar and the gar
+	# First we deploy the jar with the standard function flow (just replacing the gar file received in $1 with the 
+	# jar extracted  from the gar
+	# Then, we prepare the GAR_MVN_OPTIONS that will be used in a second call to mvn that deploys the gar
+	#
+	EXTENSION=`echo "$1"|awk -F . '{print $NF}'`
+	if [[ "$EXTENSION" == "gar" ]]; then
+		log_info "gar file found. The jar inside will be extracted and deployed too"
+		TMPDIR=`pwd`/gar_tmp
+		rm -rf $TMPDIR
+		OLDDIR=`pwd`
+		mkdir $TMPDIR
+		cd $TMPDIR
+		log_debug "Inflating $1 in $TMPDIR..."
+		unzip $1 > /dev/null
+		JAR_FILE=`find $TMPDIR/lib/ -type f -name "*.jar"`
+		
+		#TODO: check no multiple files are returned or no files
+		#this should never happen because each gar contains exactly one jar in lib/
+	
+		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$JAR_FILE $COORD_OPTS $CLASSIFIER $PACKAGING" 
+		
+		OUTPUT_FILE=gar_coord.txt
+		execute_PomGenerator --printcoord --nodeps $PROFILE_OPT $GROUPID_OPT $ARTIFACTID_OPT $VERSION_OPT $ARTIFACT_OPT -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE $PACKAGING_OPT
+		GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
+		ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
+		VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
+		
+		GAR_MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 -DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION -Dpackaging=gar -Dtypes=gar -DgeneratePom=false" 
+		cd $OLDDIR
+		
+	else
+		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 $COORD_OPTS $CLASSIFIER $PACKAGING" 	
+	fi
+	
+	if [ ${FLAGS_loglevel} -ge 2 ]; then
+		MVN_OPTIONS=`echo "-e -X $MVN_OPTIONS"`
+		GAR_MVN_OPTIONS=`echo "-e -X $GAR_MVN_OPTIONS"`
+	fi
+	
+	
+	
+	######################
+	# execute commands
+	#
+	if [ ${FLAGS_dryrun} -eq ${FLAGS_TRUE} ]; then
+		log_info "in simulation mode, skipping mvn execution... "
+	else
+		log_info "Calling mvn with options: $MVN_OPTIONS"
+		$MAVEN_HOME/bin/mvn $MVN_OPTIONS
+		EXIT_CODE=`echo $?`
+		log_debug "mvn exit status: $EXIT_CODE"
+		if [ $EXIT_CODE -ne 0 ]; then
+			log_fatal "exiting due to previous errors..."
+			if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+				exit $EXIT_CODE
+			else
+				exit 0
+			fi
+		fi
+		
+		#
+		# second call to mvn to deploy the gar
+		#
+		if [[ "$EXTENSION" == "gar" ]]; then
+			log_info "Calling mvn with options: $GAR_MVN_OPTIONS"
+			$MAVEN_HOME/bin/mvn $GAR_MVN_OPTIONS
+			EXIT_CODE=`echo $?`
+			log_debug "mvn exit status: $EXIT_CODE"
+			if [ $EXIT_CODE -ne 0 ]; then
+				log_fatal "exiting due to previous errors..."
+				if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+					exit $EXIT_CODE
+				else
+					exit 0
+				fi
+			fi
+		fi
+	fi
+}

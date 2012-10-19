@@ -1,0 +1,256 @@
+{
+
+"activemq": {
+	"5.02.00": ["org.apache.activemq:activemq-core:5.2.0", "org.apache.activemq:activemq-console:5.2.0",
+				"org.apache.activemq:activemq-jaas:5.2.0", "org.apache.activemq:activemq-web:5.2.0",
+				"org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec:1.0"]
+},
+
+"apache-poi": {
+	"3.6.0": ["org.apache.poi:poi:3.6", 
+			  "org.apache.poi:poi-scratchpad:3.6",
+			  "org.apache.poi:poi-ooxml:3.6",
+			  "org.apache.poi:poi-ooxml-schemas:3.6",
+			  "org.apache.poi:poi-contrib:3.6" ]
+},
+
+"apache-pdfbox": {
+	"0.7.3": ["pdfbox:pdfbox:0.7.3", "org.fontbox:fontbox:0.1.0", "bouncycastle:bcmail-jdk14:136"]
+},
+
+"asm": {
+	"3.1.0": ["asm:asm:3.1"]
+},
+
+"berkeleydb": {
+	"3.3.75": ["berkeleydb:je:3.3.75"]
+},
+
+"commons-codec": {
+	"1.03.00": ["commons-codec:commons-codec:1.3"],
+	"1.3.0": ["commons-codec:commons-codec:1.3"]
+},
+
+"commons-compress": {
+	"1.0.0": ["org.apache.commons:commons-compress:1.0"]
+},
+
+"commons-dbcp": {
+	"1.2.2": ["commons-dbcp:commons-dbcp:1.2.2"],
+	"1.3.0": ["commons-dbcp:commons-dbcp:1.3"]
+
+},
+
+"commons-fileupload": {
+	"1.02.01": ["commons-fileupload:commons-fileupload:1.2.1"]
+},
+
+"commons-httpclient": {
+	"3.0.1": ["commons-httpclient:commons-httpclient:3.0.1"]
+},
+
+"commons-logging": {
+	"1.1.0": ["commons-logging:commons-logging:1.1"]
+},
+
+"commons-pool": {
+	"1.3.0": ["commons-pool:commons-pool:1.3"],
+	"1.5.4": ["commons-pool:commons-pool:1.5.4"]
+},
+
+"commons-net": {
+	"2.0.0": ["commons-net:commons-net:2.0"]
+},
+
+"datanucleus-accessplatform-ldap": {
+	"2.2.2": ["org.datanucleus:datanucleus-management:1.0.2", "org.datanucleus:datanucleus-ldap:2.2.1",
+			  "org.datanucleus:datanucleus-jpa-query:2.1.2", "org.datanucleus:datanucleus-jpa:2.1.7",
+			  "org.datanucleus:datanucleus-jodatime:2.1.2", "org.datanucleus:datanucleus-jdo-query:2.2.1",
+			  "org.datanucleus:datanucleus-javaxtime:2.1.2", "org.datanucleus:datanucleus-googlecollections:2.2.0-release",
+			  "org.datanucleus:datanucleus-enhancer:2.1.3", "org.datanucleus:datanucleus-cache:2.1.2",
+			  "org.datanucleus:datanucleus-core:2.2.3", "org.datanucleus:datanucleus-rdbms:2.2.3"]
+},
+
+"derby": {
+	"10.5.3": ["org.apache.derby:derby:10.5.3.0_1", "org.apache.derby:derbyclient:10.5.3.0_1", 
+			   "org.apache.derby:derbynet:10.5.3.0_1", "org.apache.derby:derbytools:10.5.3.0_1"],
+	"10.3.2": ["org.apache.derby:derby:10.3.2.1", "org.apache.derby:derbyclient:10.3.2.1", 
+			   "org.apache.derby:derbynet:10.3.2.1", "org.apache.derby:derbytools:10.3.2.1"],
+},
+
+"dom4j": {
+	"1.6.1": ["dom4j:dom4j:1.6.1"]
+},
+
+"ehcache": {
+	"1.5.0": ["net.sf.ehcache:ehcache:1.5.0"],
+	"1.05.00": ["net.sf.ehcache:ehcache:1.5.0"]
+
+},
+
+"exist": {
+	"1.2.6": ["org.gcube.externals:exist-bundle:1.2.6"]
+},
+
+"geo-tools": {
+	"2.3.5": ["org.gcube.externals:geo-tools-bundle:2.3.5"]
+},
+
+"google-gson": {
+	"1.7.1": ["com.google.code.gson:gson:1.7.1"]
+},
+
+"gwt-ext-patched": {
+	"2.0.5": ["org.gcbube.externals:gwt-ext-patched:2.0.5"]
+},
+
+"hibernate": {
+	"3.2.2": ["org.hibernate:hibernate:3.2.2.ga"]
+},
+
+"hibernate-spatial": {
+	"1.0.0": ["org.hibernatespatial:hibernate-spatial:1.0-M2"]
+},
+
+"hibernate-spatial-postgis": {
+	"1.0.0": ["org.hibernatespatial:hibernate-spatial-postgis:1.0-M2"]
+},
+
+"hsqldb": {
+	"1.8.0": ["hsqldb:hsqldb:1.8.0.10"],
+	"1.08.00": ["hsqldb:hsqldb:1.8.0.10"]
+	
+},
+
+"httpclient": {
+	"4.0.0": ["org.apache.httpcomponents:httpclient:4.0"]
+},
+
+"httpcomponents-client": {
+	"4.1.2": ["commons-codec:commons-codec:1.4", "commons-logging:commons-logging:1.1.1",
+			  "org.apache.httpcomponents:httpclient:4.1.2","org.apache.httpcomponents:httpclient-cache:4.1.2",
+			  "org.apache.httpcomponents:httpcore:4.1.2", "org.apache.httpcomponents:httpmime:4.1.2"]
+},
+
+"httpcore": {
+	"4.0.1": ["org.apache.httpcomponents:httpcore:4.0.1"]
+},
+
+"jakarta-commons-net": {
+	"2.0.0": ["commons-net:commons-net:2.0"]
+},
+
+"javamail": {
+	"1.04.00": ["javax.mail:mail:1.4"]
+},
+
+"jaxen": {
+	"1.1.0": ["jaxen:jaxen:1.1-beta-8"]
+},
+
+"jcommon": {
+	"1.0.16": ["jfree:jcommon:1.0.16"]
+},
+
+"jdbm": {
+	"1.0.0": ["jdbm:jdbm:1.0"]
+},
+
+"jdo": {
+	"3.1.0": ["org.gcube.externals:jdo-api-snapshot:3.1.0"]
+},
+
+"jena": {
+	"2.5.6": ["com.hp.hpl.jena:jena:2.5.6"]
+},
+
+"jetty": {
+	"7.0.0": ["org.mortbay.jetty:jetty:7.0.0.pre5"],
+	"7.00.00": ["org.mortbay.jetty:jetty:7.0.0.pre5"]
+},
+
+"jfreechart": {
+	"1.0.13": ["jfree:jfreechart:1.0.13"]
+},
+
+"jgrapht": {
+	"0.8.2": ["org.jgrapht:jgrapht-jdk1.6:0.8.2",
+			  "graphlayout:graphlayout:1.2.1",
+			  "jgraph:jgraph:5.8.3.1"]
+},
+
+"jms": {
+	"1.01.00": ["javax.jms:jms-api:1.1-rev-1"]
+},
+
+"jsch": {
+	"0.1.46": ["com.jcraft:jsch:0.1.46"]
+},
+
+"jts": {
+	"1.10.0": ["com.vividsolutions:jts:1.10"],
+	"1.8.0":  ["com.vividsolutions:jts:1.8"]
+},
+
+"log4j": {
+	"1.2.8": ["log4j:log4j:1.2.8"]
+},
+
+"lucene": {
+	"2.4.1": ["org.apache.lucene:lucene-core:2.4.1", "org.apache.lucene:lucene-demos:2.4.1"]
+},
+
+"lucene-highlighter": {
+	"2.4.1": ["org.apache.lucene:lucene-highlighter:2.4.1"]
+},
+
+"mime-util": {
+	"2.1.2": ["eu.medsea.mimeutil:mime-util:2.1.2"]
+},
+
+"mysql-jdbc": {
+	"5.1.5": ["mysql:mysql-connector-java:5.1.5"],
+	"5.01.05": ["mysql:mysql-connector-java:5.1.5"]
+},
+
+"novell-jldap": {
+	"08.03.01": ["com.novell.ldap:jldap:2008.03.01"]
+},
+
+"novell-jldap-utilities": {
+	"08.03.01": ["com.novell.ldap:jldap-utilities:2008.03.01"]
+},
+
+"postgis": {
+	"2.0.0": ["org.postgis:postgis:2.0.0SVN"]
+},
+
+"postgresql-jdbc": {
+	"8.04.00": ["postgresql:postgresql:8.4-702.jdbc4"],
+	"8.4.0": ["postgresql:postgresql:8.4-702.jdbc4"]
+	
+},
+
+"slf4j": {
+	"1.05.00": ["org.slf4j:slf4j-api:1.5.0","org.slf4j:slf4j-log4j12:1.5.0"],
+	"1.5.0": ["org.slf4j:slf4j-api:1.5.0","org.slf4j:slf4j-log4j12:1.5.0"]
+
+},
+
+"snowball-stemmer": {
+	"2.4.1": ["org.apache.lucene:lucene-snowball:2.4.1"]
+},
+
+"textcat": {
+	"1.0.1": ["org.knallgrau.utils:textcat:1.0.1"]
+},
+
+"XStream": {
+	"1.3.1": ["com.thoughtworks.xstream:xstream:1.3.1"]
+},
+
+"voms-admin-server": {
+	"2.0.15": ["org.glite.security:voms-admin-server:2.0.15"]
+}
+
+}

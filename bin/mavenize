@@ -1,0 +1,157 @@
+#!/bin/bash
+#
+#
+# Authors:
+#   Gabriele Giammatteo - gabriele.giammatteo@eng.it
+#
+# 2012
+#
+
+
+######################
+# initialisation and commandline parsing
+#
+MAVENIZER_HOME=$(dirname $(dirname $0))
+source $MAVENIZER_HOME/lib/shflags
+source $MAVENIZER_HOME/lib/mavenizelib
+SCRIPT_NAME="mavenize"
+
+
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	snapshotFlag="-s"
+fi
+
+
+FLAGS_HELP="USAGE: $0 [flags]"
+DEFINE_string 'file' '' "artifact file to mavenize. If not specified, a search will be done in the etics module home trying to find a suitable artifact" 'f'
+DEFINE_string 'profile' '' "profile.xml file from where take information about the artifact" 'p'
+DEFINE_string 'groupid' '' "profile.xml file from where take information about the artifact" 'g'
+DEFINE_string 'artifactid' '' "profile.xml file from where take information about the artifact" 'a'
+DEFINE_string 'version' '' "optional: version" 'v'
+DEFINE_string 'packaging' '' "packaging. If not provided, the file extension will be used" 'k'
+DEFINE_string 'pom' '' "pom to use. If provided it will used without generate it" 'o'
+DEFINE_boolean 'deps' true "If false, dependencies are in the pom are not generated" 'd'
+DEFINE_boolean 'dryrun' false "no act. Perform just a simulation" 'n'
+DEFINE_integer 'loglevel' 1 "log level. Accepted values are 0, 1, 2" 'l'
+FLAGS "$@" || exit 1
+eval set -- "${FLAGS_ARGV}"
+
+
+
+######################
+# prints out the script's header
+#
+cat <<EOF
+[mavenize] *** Mavenize script ***
+[mavenize]
+[mavenize] print env:
+[mavenize]     MAVEN_HOME=$MAVEN_HOME
+[mavenize]     MAVEN_SETTINGS=$MAVEN_SETTINGS
+[mavenize]     MAVEN_LOCAL_REPOSITORY=$MAVEN_LOCAL_REPOSITORY
+[mavenize]     MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE
+[mavenize]     MAVEN_GCUBE_SNAPSHOTS=$MAVEN_GCUBE_SNAPSHOTS
+[mavenize]     MAVEN_GCUBE_RELEASES=$MAVEN_GCUBE_RELEASES
+[mavenize]     MAVEN_GCUBE_STAGING=$MAVEN_GCUBE_STAGING
+[mavenize]     MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR
+EOF
+
+
+######################
+# checks pre-requisites to run the script
+#
+[ -z "$MAVEN_HOME" ] && log_fatal "MAVEN_HOME is not set. exiting..." && exit 1;
+[ -z "$MAVEN_SETTINGS" ] && log_fatal "MAVEN_SETTINGS is not set. exiting..." && exit 1;
+[ -z "$MAVEN_LOCAL_REPOSITORY" ] && log_fatal "MAVEN_LOCAL_REPOSITORY is not set. exiting..." && exit 1;
+[[ "$MAVEN_BUILD_TYPE" != "development" && "$MAVEN_BUILD_TYPE" != "candidate" && "$MAVEN_BUILD_TYPE" != "release" ]] && log_fatal "MAVEN_BUILD_TYPE is not set or not valid (one in development|candidate|release is expected). exiting..." && exit 1;
+
+
+######################
+# search the artifact
+#
+ARTIFACT_SEARCHING_DIR=`pwd`/etics-tmp
+if [ -n "${FLAGS_file}" ]; then
+	ARTIFACT_FILE=`readlink -f ${FLAGS_file}`
+else
+	auto_select_artifact
+fi
+
+
+######################
+# search the profile.xml
+#
+if [ -n "${FLAGS_profile}" ]; then
+	PROFILE_FILE=`readlink -f ${FLAGS_profile}`
+else
+	PROFILE_FILE=`pwd`/etc/profile.xml
+fi
+
+
+######################
+# generate the pom.xml
+#
+if [ -n "${FLAGS_pom}" ]; then
+	POM_FILE=${FLAGS_pom}
+else
+	
+	#
+	# prepares PomGenerator commandline
+	#
+	
+	if [ ! -e "$PROFILE_FILE" ]; then
+		PROFILE_OPT=""
+	else
+		PROFILE_OPT="--profile $PROFILE_FILE"
+	fi
+	
+	if [ -n "${FLAGS_groupid}" ]; then
+		GROUPID_OPT="--groupid ${FLAGS_groupid}"
+	fi
+	
+	if [ -n "${FLAGS_artifactid}" ]; then
+		ARTIFACTID_OPT="--artifactid ${FLAGS_artifactid}"
+	fi
+	
+	if [ -n "${FLAGS_version}" ]; then
+		VERSION_OPT="--version ${FLAGS_version}"
+	fi
+	
+	if [ ${FLAGS_deps} -eq ${FLAGS_FALSE} ]; then
+		NODEPS_OPTION="--nodeps"
+	fi
+	
+	if [ ! -e "$ARTIFACT_FILE" ]; then
+		ARTIFACT_OPT=""
+	else
+		ARTIFACT_OPT="--artifactname `basename $ARTIFACT_FILE`"
+	fi
+	
+	if [ -n "${FLAGS_packaging}" ]; then
+		PACKAGING_OPT="--packaging ${FLAGS_packaging}"
+	elif [ -e "$ARTIFACT_FILE" ]; then
+		PACKAGING_OPT="--packaging `echo "$ARTIFACT_FILE"|awk -F . '{print $NF}'`"
+	else
+		PACKAGING_OPT=""
+	fi
+	
+	POM_FILE=`pwd`/mvnz_pom.xml
+	execute_PomGenerator $PROFILE_OPT $GROUPID_OPT $ARTIFACTID_OPT $VERSION_OPT $ARTIFACT_OPT -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $POM_FILE $PACKAGING_OPT $NODEPS_OPTION
+fi
+
+
+######################
+# rewrite dependencies' versions in order to have in the pom the same versions 
+# used for integration
+#
+MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -DallowSnapshots=true -Dincludes=org.gcube*:*,org.gcore*:*"
+else
+	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -Dincludes=org.gcube*:*,org.gcore*:*"
+fi
+
+
+######################
+# deploy on maven
+#
+
+execute_mvn $ARTIFACT_FILE $POM_FILE

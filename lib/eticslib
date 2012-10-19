@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#uname prints system info, like kernel, processor, etc. uname -m prints hardware name
+if [ $(uname -m) == "x86_64" ]; then
+    ARCH=64
+else
+    ARCH=32
+fi
+
+XMLSTARLET_BIN="$MAVENIZER_HOME/lib/xmlstarlet$ARCH"
+
+
+
+######################
+# this function executes an xpath query (passed in $1) on the build-status.xml
+# file of the current build
+#
+query_build-status () {
+        echo `$XMLSTARLET_BIN sel -t -v "$1" $ETICSLIB_BUILD_STATUS`
+}
+
+
+######################
+# this function tries to automatically select the component's artifact, looking
+# up in the component's workspace.
+# Returns:
+# - error if 0 or multiple files matching the rules have been found
+# - if exactly 1 artifact has been found, returns the name of the artifact's 
+#   file
+#
+auto_select_artifact() {
+	if [ ${FLAGS_loglevel} -gt 1 ]; then
+		echo "[eticslib] Trying to automatically select artifact file:"
+		echo "[eticslib]   searching directory: $ETICSLIB_ARTIFACT_SEARCHING_DIR"
+	fi
+	for i in `find $ETICSLIB_ARTIFACT_SEARCHING_DIR -type f -name *.jar`; do
+		#this check guarantees that the cycle is executed extactly one time
+		if [ -n "$ETICSLIB_ARTIFACT_FILE" ]; then
+			echo "[eticslib][FATAL] auto_select_artifact() found multiple artifact, at least:"
+			echo "[eticslib][FATAL] - $ETICSLIB_ARTIFACT_FILE"
+			echo "[eticslib][FATAL] - $i"
+			echo "[eticslib][FATAL] exiting ..."
+			if [ -n "$MAVENIZE_FAIL_W_ERROR" ]; then
+				exit 3
+			else
+				exit 0
+			fi
+		fi
+		ETICSLIB_ARTIFACT_FILE=$i
+		if [ ${FLAGS_loglevel} -gt 1 ]; then
+			echo "[eticslib]   artifact found: $ETICSLIB_ARTIFACT_FILE"
+		fi
+	done
+}
+
+
+
+ETICSLIB_BUILD_STATUS=`dirname $MODULE_WORKSPACE`/reports/build-status.xml
+ETICSLIB_ARTIFACT_SEARCHING_DIR=$MODULE_WORKSPACE/etics-tmp
+ETICSLIB_ARTIFACT_FILE=""
+ETICSLIB_MODULE_NAME=`basename $MODULE_WORKSPACE`
+ETICSLIB_MODULE_VERSION=$(query_build-status "//module[@name='$ETICSLIB_MODULE_NAME']/@version")

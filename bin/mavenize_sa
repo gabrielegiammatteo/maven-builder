@@ -1,0 +1,188 @@
+#!/bin/bash
+#
+#
+# Authors:
+#   Gabriele Giammatteo - gabriele.giammatteo@eng.it
+#
+# 2012
+#
+
+
+######################
+# initialisation and commandline parsing
+#
+MAVENIZER_HOME=$(dirname $(dirname $0))
+source $MAVENIZER_HOME/lib/shflags
+source $MAVENIZER_HOME/lib/mavenizelib
+SCRIPT_NAME="mavenize_sa"
+
+FLAGS_HELP="USAGE: $0 [flags]"
+DEFINE_string 'sa' '' "servicearchive file containing the profile to update" 's'
+DEFINE_boolean 'dryrun' false "no act. Perform a simulation" 'n'
+DEFINE_integer 'loglevel' 1 "log level. Accepted values are 0, 1, 2" 'l'
+FLAGS "$@" || exit 1
+eval set -- "${FLAGS_ARGV}"
+
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	snapshotFlag="-s"
+fi
+
+
+
+######################
+# print out the script's header
+#
+if [ ${FLAGS_loglevel} -ge 1 ]; then
+cat <<EOF
+[mavenize_sa] *** Mavenize script ***
+[mavenize_sa]
+[mavenize_sa] print env:
+[mavenize_sa]     MAVEN_HOME=$MAVEN_HOME
+[mavenize_sa]     MAVEN_SETTINGS=$MAVEN_SETTINGS
+[mavenize_sa]     MAVEN_LOCAL_REPOSITORY=$MAVEN_LOCAL_REPOSITORY
+[mavenize_sa]     MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE
+[mavenize_sa]     MAVEN_GCUBE_SNAPSHOTS=$MAVEN_GCUBE_SNAPSHOTS
+[mavenize_sa]     MAVEN_GCUBE_RELEASES=$MAVEN_GCUBE_RELEASES
+[mavenize_sa]     MAVEN_GCUBE_STAGING=$MAVEN_GCUBE_STAGING
+[mavenize_sa]     MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR
+EOF
+fi
+
+######################
+# checks pre-requisites to run the script
+#
+[ -z "$MAVEN_HOME" ] && log_fatal "MAVEN_HOME is not set. exiting..." && exit 1;
+[ -z "$MAVEN_SETTINGS" ] && log_fatal "MAVEN_SETTINGS is not set. exiting..." && exit 1;
+[ -z "$MAVEN_LOCAL_REPOSITORY" ] && log_fatal "MAVEN_LOCAL_REPOSITORY is not set. exiting..." && exit 1;
+[[ "$MAVEN_BUILD_TYPE" != "development" && "$MAVEN_BUILD_TYPE" != "candidate" && "$MAVEN_BUILD_TYPE" != "release" ]] && log_fatal "MAVEN_BUILD_TYPE is not set or not valid (one in development|candidate|release is expected). exiting..." && exit 1;
+
+
+
+
+######################
+# search servicearchive
+#
+if [ -n "${FLAGS_sa}" ]; then
+	SA_FILE=`readlink -f ${FLAGS_sa}`	
+else
+	log_debug "input sa not provided. Guessing..."
+	SA_FILE=`find tgz -name "*servicearchive*.tar.gz" | head -n1`;
+	SA_FILE=`readlink -f $SA_FILE`
+fi
+log_info "Processing servicearchive $SA_FILE"
+
+if [ ! -e "$SA_FILE" ]; then
+	log_fatal "SA $SA_FILE does not exits. Exiting... "
+	if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+		exit 3
+	else
+		exit 0
+	fi
+fi
+
+
+
+######################
+# inflate servicearchive
+#
+SA_ROOTDIR=`pwd`/mvnz_tmp
+mkdir $SA_ROOTDIR
+log_debug "Inflating servicearchive in $SA_ROOTDIR..."
+tar xzf $SA_FILE -C $SA_ROOTDIR
+
+
+
+
+######################
+# update the profile.xml
+#
+PROFILE_FILE=$SA_ROOTDIR/profile.xml
+if [ ! -e "$PROFILE_FILE" ]; then
+	log_fatal "Profile $PROFILE_FILE does not exits. Exiting... "
+	if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+		exit 3
+	else
+		exit 0
+	fi
+fi
+
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	snapshotFlag="-s"
+fi
+
+
+cp $PROFILE_FILE $PROFILE_FILE.orig
+
+#call ProfileUpdater
+log_debug "updating profile.xml"
+execute_ProfileUpdater --profile $PROFILE_FILE -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag
+
+
+
+######################
+# create and deploy javadoc artifact
+#
+log_info "Processing javadocs..."
+for i in `find $SA_ROOTDIR -mindepth 1 -maxdepth 1 -type d`; do
+	PACKAGE_NAME=$(basename $i)
+	if [ ! -e "$i/doc/api" ]; then
+		log_info "javadoc not found for package $PACKAGE_NAME. Skipping..."
+		continue
+	fi
+	
+	#create javadoc pom
+	OUTPUT_FILE=sa_coords.txt
+	execute_PomGenerator --printcoord --profile $PROFILE_FILE --nodeps --package $PACKAGE_NAME -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
+	GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
+	ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
+	VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
+	
+	
+	#create jar
+	OLDDIR=`pwd`
+	JAR_FILE=$OLDDIR/javadoc_$PACKAGE_NAME.jar
+	cd $i/doc/api
+	jar cf $JAR_FILE *
+	log_info "javadoc artifact generated at $JAR_FILE"
+	cd $OLDDIR
+	
+	#deploy
+	log_debug "deploying javadoc artifact..."
+	execute_mvn $JAR_FILE "null" jar javadoc
+done
+
+
+
+######################
+# recreate the SA
+#
+log_info "Recreating $SA_FILE"	
+OLDDIR=`pwd`
+cd $SA_ROOTDIR
+tar czf $SA_FILE *
+cd $OLDDIR	
+
+
+
+######################
+# deploy the SA
+#
+
+OUTPUT_FILE=sa_coords.txt
+execute_PomGenerator  --printcoord --profile $PROFILE_FILE --nodeps --firstpackage -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
+GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
+ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
+VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
+
+#deploy
+log_debug "deploying servicearchive artifact..."
+execute_mvn $SA_FILE "null" tar.gz servicearchive
+
+
+
+######################
+# cleanup temp directory
+#
+log_debug "removing temp directory $SA_ROOTDIR"
+rm -rf $SA_ROOTDIR
+

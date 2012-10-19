@@ -1,0 +1,119 @@
+#!/bin/bash
+#
+#
+# Authors:
+#   Gabriele Giammatteo - gabriele.giammatteo@eng.it
+#
+# 2012
+#
+
+######################
+# initialisation and commandline parsing
+#
+MODULE_WORKSPACE=`pwd`
+MAVENIZER_HOME=$(dirname $(dirname $0))
+source $MAVENIZER_HOME/lib/eticslib
+SCRIPT_NAME="mvn-proxy"
+
+
+cat <<EOF
+[mvn-proxy] *** Maven Proxy ***
+EOF
+
+######################
+# checks all needed environment variables are set
+#
+[ -z "$MAVEN_HOME" ] && echo "[mvn-proxy] MAVEN_HOME is not set. exiting..." && exit 1;
+[ -z "$MAVEN_SETTINGS" ] && echo "[mvn-proxy] MAVEN_SETTINGS is not set. exiting..." && exit 1;
+[ -z "$MAVEN_LOCAL_REPOSITORY" ] && echo "[mvn-proxy] MAVEN_LOCAL_REPOSITORY is not set. exiting..." && exit 1;
+[[ "$MAVEN_BUILD_TYPE" != "development" && "$MAVEN_BUILD_TYPE" != "candidate" && "$MAVEN_BUILD_TYPE" != "release" ]] && echo "[mvn-proxy] MAVEN_BUILD_TYPE is not set or not valid (one in development|candidate|release is expected). exiting..." && exit 1;
+
+
+echo "[mvn-proxy] environment:"
+echo "[mvn-proxy]   MAVEN_HOME=$MAVEN_HOME"
+echo "[mvn-proxy]   MAVEN_SETTINGS=$MAVEN_SETTINGS"
+echo "[mvn-proxy]   MAVEN_LOCAL_REPOSITORY=$MAVEN_LOCAL_REPOSITORY"
+echo "[mvn-proxy]   MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE"
+echo "[mvn-proxy]   MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR"
+echo "[mvn-proxy]   arguments: $@"
+
+GMVN_TMP_FILE='.gmvn_tmp'
+CLASSPATH=`cat $MAVENIZER_HOME/classpath.txt`:$MAVENIZER_HOME/target/classes
+
+MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
+
+
+
+######################
+# checks that ETICS version and pom version are consistent
+#
+bash -c "$MVN org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | tee $GMVN_TMP_FILE"
+MVN_VERSION=`cat $GMVN_TMP_FILE | sed -n -e '/^[0-9]*\.[0-9]*\.[0-9]*/p'`
+
+MVN_CLEANED_VERSION=${MVN_VERSION%-SNAPSHOT}
+echo "[mvn-proxy] project version: $MVN_VERSION"
+echo "[mvn-proxy] etics version: $ETICSLIB_MODULE_VERSION"
+
+if [[ "$MVN_CLEANED_VERSION" != "$ETICSLIB_MODULE_VERSION" ]]; then
+	echo "[mvn-proxy][ERROR] project version in pom.xml and ETICS configuration's version must be the same (except for the -SNAPSHOT postfix)."
+	if [ -n "$MAVENIZER_FAIL_ON_ERROR" ]; then
+		exit 1
+	else
+		exit 0
+	fi
+fi
+
+######################
+# updates versions
+#
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	bash -c "$MVN versions:use-latest-versions -DallowSnapshots=true -Dincludes=org.gcube*:*,org.gcore*:*"
+else
+	bash -c "$MVN versions:set -Dincludes=org.gcube*:*,org.gcore*:* -DnewVersion=$ETICSLIB_MODULE_VERSION"
+	bash -c "$MVN versions:use-latest-versions -Dincludes=org.gcube*:*,org.gcore*:*"
+fi
+
+CMDLINE="$MVN $@"
+
+
+######################
+# set repository for deployment of artifact
+#
+if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
+	CMDLINE="$CMDLINE -DaltDeploymentRepository=gcube-snapshots::default::$MAVEN_GCUBE_SNAPSHOTS"
+
+elif [[ "$MAVEN_BUILD_TYPE" == "candidate" ]]; then
+	CMDLINE="$CMDLINE -DaltDeploymentRepository=gcube-staging::default::$MAVEN_GCUBE_STAGING"
+
+elif [[ "$MAVEN_BUILD_TYPE" == "release" ]]; then
+	CMDLINE="$CMDLINE -DaltDeploymentRepository=gcube-releases::default::$MAVEN_GCUBE_RELEASES"
+
+        #check whether artifact is already deployed or not. In the former case, the mvn execution will exit with an exception
+        #to not make mvn proxy fails for this, we skip the deploy if artifat is already in the repository
+        POM="pom.xml"
+        SUBMOD=`echo $@ | awk '{for(i=1; i <= NF; i++){if($i=="-pl"){j=i+1; print $j}}}'`
+        if [ -n "$SUBMOD" ]; then
+                POM="$SUBMOD/pom.xml"
+        fi
+        ARTIFACT_URL="${MAVEN_GCUBE_RELEASES}`java -cp $CLASSPATH org.gcube.buildutils.mavenizer.RepoPathCalculator --pom $POM`"
+        ALREADY_DEPLOYED=`wget --no-cache -q -O/dev/null $ARTIFACT_URL && echo 1`
+        if [ -n "$ALREADY_DEPLOYED" ]; then
+                echo "[mvn-proxy] pom already deployed on the repository: $ARTIFACT_URL"
+                echo "[mvn-proxy] Skipping deploy because artifact is already deployed"
+                CMDLINE="$CMDLINE -Dmaven.deploy.skip"
+        fi
+
+fi
+
+
+######################
+# executes mvn commandline
+#
+echo "[mvn-proxy] Executing $CMDLINE"
+bash -c "$CMDLINE"
+EXIT_CODE=`echo $?`
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "[mvn-proxy][ERROR] exiting due to previous errors..."
+        exit $EXIT_CODE
+fi
+exit 0

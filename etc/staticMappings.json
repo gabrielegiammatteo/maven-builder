@@ -1,0 +1,18 @@
+{
+"groupId": {
+	"VREManagement": "org.gcube.resourcemanagement",
+},
+
+"dependencyType": {
+	"org.gcube.application:refextract-script": "gz",
+	"org.gcube.application:ocr": "gz",
+	"org.gcube.application:ocropus": "gz",
+	"org.gcube.contentmanagement:geo-utils-custom": "pom",
+	"javax.jms:jms": "pom"
+},
+
+"dependencyScope": {
+	"jaxen:jaxen": "provided"
+}
+
+}
