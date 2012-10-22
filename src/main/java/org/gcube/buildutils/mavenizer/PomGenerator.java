@@ -299,7 +299,6 @@ public class PomGenerator {
 			for (ProfilePackageDependency d : matchigPackage.getDependencies()) {
 				Set<Dependency> deps = mapr.getDependency(d);
 				for (Dependency dependency : deps) {
-					if(isSnapshot && !dependency.getVersion().endsWith("-SNAPSHOT")) dependency.setVersion(dependency.getVersion() + "-SNAPSHOT");
 					model.addDependency(dependency);
 				}
 			}	
