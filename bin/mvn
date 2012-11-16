@@ -34,6 +34,7 @@ echo "[mvn-proxy]   MAVEN_HOME=$MAVEN_HOME"
 echo "[mvn-proxy]   MAVEN_SETTINGS=$MAVEN_SETTINGS"
 echo "[mvn-proxy]   MAVEN_LOCAL_REPOSITORY=$MAVEN_LOCAL_REPOSITORY"
 echo "[mvn-proxy]   MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE"
+echo "[mvn-proxy]   MAVEN_SYSTEM_VERSION=$MAVEN_SYSTEM_VERSION"
 echo "[mvn-proxy]   MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR"
 echo "[mvn-proxy]   arguments: $@"
 
@@ -69,6 +70,8 @@ fi
 if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
 	bash -c "$MVN versions:use-latest-versions -DallowSnapshots=true -Dincludes=org.gcube*:*,org.gcore*:*"
 else
+	[ -n "$MAVEN_SYSTEM_VERSION" ] && ETICSLIB_MODULE_VERSION="$ETICSLIB_MODULE_VERSION-$MAVEN_SYSTEM_VERSION"
+	echo "[mvn-proxy] setting module version to : $ETICSLIB_MODULE_VERSION"
 	bash -c "$MVN versions:set -Dincludes=org.gcube*:*,org.gcore*:* -DnewVersion=$ETICSLIB_MODULE_VERSION"
 	bash -c "$MVN versions:use-latest-versions -Dincludes=org.gcube*:*,org.gcore*:*"
 fi
