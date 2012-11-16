@@ -52,7 +52,7 @@ bash -c "$MVN org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpres
 MVN_VERSION=`cat $GMVN_TMP_FILE | sed -n -e '/^[0-9]*\.[0-9]*\.[0-9]*/p'`
 
 MVN_CLEANED_VERSION=${MVN_VERSION%-SNAPSHOT}
-MVN_CLEANED_VERSION=${MVN_VERSION%-$MAVEN_SYSTEM_VERSION}
+MVN_CLEANED_VERSION=${MVN_CLEANED_VERSION%-$MAVEN_SYSTEM_VERSION}
 
 echo "[mvn-proxy] project version: $MVN_VERSION"
 echo "[mvn-proxy] etics version: $ETICSLIB_MODULE_VERSION"
