@@ -144,7 +144,7 @@ public class PomGenerator {
 		Option printCoordOpt = OptionBuilder.withLongOpt("printcoord").withDescription("only prints out maven coordinates").create("c");
 		
 		Option isSnapshotOpt = OptionBuilder.withLongOpt("snapshot").withDescription("whether postifx verion with -SNAPSHOT or not.").create("s");
-		Option appendSystemVersionOpt = OptionBuilder.withLongOpt("systemversion").withDescription("if set, the systemversion  specified is appended to version").create("m");
+		Option appendSystemVersionOpt = OptionBuilder.withLongOpt("systemversion").withArgName("SYSTEM_VERSION").withDescription("if set, the systemversion  specified is appended to version").create("m");
 		Option nodepsOpt = OptionBuilder.withLongOpt("nodeps").withDescription("whether generate also dependencies section of not.").create("d");
 		Option firstPackageOpt = OptionBuilder.withLongOpt("firstpackage").withDescription("generate pom for the first package. Overrides --artifactname and --package").create("f");
 
