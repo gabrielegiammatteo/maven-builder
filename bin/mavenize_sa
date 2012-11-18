@@ -44,6 +44,7 @@ cat <<EOF
 [mavenize_sa]     MAVEN_GCUBE_SNAPSHOTS=$MAVEN_GCUBE_SNAPSHOTS
 [mavenize_sa]     MAVEN_GCUBE_RELEASES=$MAVEN_GCUBE_RELEASES
 [mavenize_sa]     MAVEN_GCUBE_STAGING=$MAVEN_GCUBE_STAGING
+[mavenize_sa]     MAVEN_SYSTEM_VERSION=$MAVEN_SYSTEM_VERSION
 [mavenize_sa]     MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR
 EOF
 fi
@@ -110,12 +111,16 @@ if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
 	snapshotFlag="-s"
 fi
 
+if [ -n "$MAVEN_SYSTEM_VERSION" ]; then
+	SYS_VERSION_OPT="--systemversion $MAVEN_SYSTEM_VERSION"
+fi
+
 
 cp $PROFILE_FILE $PROFILE_FILE.orig
 
 #call ProfileUpdater
 log_debug "updating profile.xml"
-execute_ProfileUpdater --profile $PROFILE_FILE -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag
+execute_ProfileUpdater --profile $PROFILE_FILE -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag $SYS_VERSION_OPT
 
 
 
@@ -132,7 +137,7 @@ for i in `find $SA_ROOTDIR -mindepth 1 -maxdepth 1 -type d`; do
 	
 	#create javadoc pom
 	OUTPUT_FILE=sa_coords.txt
-	execute_PomGenerator --printcoord --profile $PROFILE_FILE --nodeps --package $PACKAGE_NAME -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
+	execute_PomGenerator --printcoord --profile $PROFILE_FILE --nodeps --package $PACKAGE_NAME -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag $SYS_VERSION_OPT -o $OUTPUT_FILE
 	GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
 	ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 	VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
@@ -169,7 +174,7 @@ cd $OLDDIR
 #
 
 OUTPUT_FILE=sa_coords.txt
-execute_PomGenerator  --printcoord --profile $PROFILE_FILE --nodeps --firstpackage -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
+execute_PomGenerator  --printcoord --profile $PROFILE_FILE --nodeps --firstpackage -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag $SYS_VERSION_OPT -o $OUTPUT_FILE
 GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
 ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
