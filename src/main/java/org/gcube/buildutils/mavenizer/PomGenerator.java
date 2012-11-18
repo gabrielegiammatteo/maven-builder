@@ -84,7 +84,7 @@ public class PomGenerator {
 			coordinates.put("groupId",mapr.getGroupId(matchingPackage.getMyProfile().getServiceClass()));
 			coordinates.put("artifactId",mapr.getArtifactId(matchingPackage.getPackageName()));
 			String version = mapr.getVersion(matchingPackage.getVersion());
-			if(isSnapshot && !version.endsWith("-SNAPSHOT")) version = version + "-SNAPSHOT";
+			//if(isSnapshot && !version.endsWith("-SNAPSHOT")) version = version + "-SNAPSHOT";
 			coordinates.put("version",version);
 		}
 		
@@ -144,6 +144,7 @@ public class PomGenerator {
 		Option printCoordOpt = OptionBuilder.withLongOpt("printcoord").withDescription("only prints out maven coordinates").create("c");
 		
 		Option isSnapshotOpt = OptionBuilder.withLongOpt("snapshot").withDescription("whether postifx verion with -SNAPSHOT or not.").create("s");
+		Option appendSystemVersionOpt = OptionBuilder.withLongOpt("systemversion").withDescription("if set, the systemversion  specified is appended to version").create("m");
 		Option nodepsOpt = OptionBuilder.withLongOpt("nodeps").withDescription("whether generate also dependencies section of not.").create("d");
 		Option firstPackageOpt = OptionBuilder.withLongOpt("firstpackage").withDescription("generate pom for the first package. Overrides --artifactname and --package").create("f");
 
@@ -168,6 +169,7 @@ public class PomGenerator {
 		options.addOption(packagingOpt);
 		options.addOption(printCoordOpt);
 		options.addOption(staticmOpt);
+		options.addOption(appendSystemVersionOpt);
 		
 		
 		
@@ -262,10 +264,20 @@ public class PomGenerator {
 			coordinates.put("artifactId", cmd.getOptionValue("r"));
 		}
 		
+		//post-processing version
 		if(cmd.hasOption("v")){
 			String version =  cmd.getOptionValue("v");
-			if(isSnapshot && !version.endsWith("-SNAPSHOT")) version = version + "-SNAPSHOT";
 			coordinates.put("version", version);
+		}
+		
+		if(cmd.hasOption("m")){
+			String v = coordinates.get("version") + "-" + cmd.getOptionValue("m");
+			coordinates.put("version", v);
+		}
+		
+		if(isSnapshot && !coordinates.get("version").endsWith("-SNAPSHOT")){
+			String v = coordinates.get("version") + "-SNAPSHOT";
+			coordinates.put("version", v);
 		}
 		
 		if(cmd.hasOption("n")){

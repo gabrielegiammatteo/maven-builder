@@ -52,6 +52,7 @@ public class ProfileUpdater {
 		Option extmOpt = OptionBuilder.withLongOpt("extmap").withArgName("PATH").hasArg(true).withDescription("path to ExternalSoftware mapping File").create("e");
 		Option staticmOpt = OptionBuilder.withLongOpt("staticmap").withArgName("PATH").hasArg(true).withDescription("path to the static mapping File").create("t");
 		Option isSnapshotOpt = OptionBuilder.withLongOpt("snapshot").withDescription("whether postifx verion with -SNAPSHOT or not.").create("s");
+		Option appendSystemVersionOpt = OptionBuilder.withLongOpt("systemversion").withDescription("if set, the systemversion  specified is appended to version").create("m");
 
 		
 		// create the Options
@@ -61,6 +62,7 @@ public class ProfileUpdater {
 		options.addOption(extmOpt);	
 		options.addOption(isSnapshotOpt);
 		options.addOption(staticmOpt);
+		options.addOption(appendSystemVersionOpt);
 		
 		
 		CommandLineParser parser = new PosixParser();
@@ -99,6 +101,11 @@ public class ProfileUpdater {
 		else {
 			staticMappingFile = new File("staticMappings.json");
 		}
+		
+		String systemVersion = null;
+		if(cmd.hasOption("m")){
+			systemVersion = cmd.getOptionValue("m");
+		}
 
 		Profile profile = Profile.parse(inputProfile);
 		
@@ -110,6 +117,11 @@ public class ProfileUpdater {
 			ProfileUpdater.addMavenCoordinates(p, mapr);
 			p.removeDependencies();
 			p.removeWSDLs();
+			
+			if(systemVersion != null){
+				String currentVersion = p.getVersion().toString();
+				p.setVersion(currentVersion + "-" + systemVersion); 
+			}
 			
 			if(isSnapshot){
 				String currentVersion = p.getVersion().toString();
