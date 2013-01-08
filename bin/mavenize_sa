@@ -111,9 +111,9 @@ if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
 	snapshotFlag="-s"
 fi
 
-#if [ -n "$MAVEN_SYSTEM_VERSION" ]; then
-#	SYS_VERSION_OPT="--systemversion $MAVEN_SYSTEM_VERSION"
-#fi
+if [ -n "$MAVEN_SYSTEM_VERSION" ]; then
+	SYS_VERSION_OPT="--systemversion $MAVEN_SYSTEM_VERSION"
+fi
 
 
 cp $PROFILE_FILE $PROFILE_FILE.orig
@@ -137,7 +137,7 @@ for i in `find $SA_ROOTDIR -mindepth 1 -maxdepth 1 -type d`; do
 	
 	#create javadoc pom
 	OUTPUT_FILE=sa_coords.txt
-	execute_PomGenerator --printcoord --profile $PROFILE_FILE --nodeps --package $PACKAGE_NAME -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag $SYS_VERSION_OPT -o $OUTPUT_FILE
+	execute_PomGenerator --printcoord --profile $PROFILE_FILE --nodeps --package $PACKAGE_NAME -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
 	GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
 	ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 	VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
@@ -174,7 +174,7 @@ cd $OLDDIR
 #
 
 OUTPUT_FILE=sa_coords.txt
-execute_PomGenerator  --printcoord --profile $PROFILE_FILE --nodeps --firstpackage -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag $SYS_VERSION_OPT -o $OUTPUT_FILE
+execute_PomGenerator  --printcoord --profile $PROFILE_FILE --nodeps --firstpackage -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE
 GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
 ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
