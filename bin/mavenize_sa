@@ -111,9 +111,9 @@ if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
 	snapshotFlag="-s"
 fi
 
-if [ -n "$MAVEN_SYSTEM_VERSION" ]; then
-	SYS_VERSION_OPT="--systemversion $MAVEN_SYSTEM_VERSION"
-fi
+#if [ -n "$MAVEN_SYSTEM_VERSION" ]; then
+#	SYS_VERSION_OPT="--systemversion $MAVEN_SYSTEM_VERSION"
+#fi
 
 
 cp $PROFILE_FILE $PROFILE_FILE.orig
