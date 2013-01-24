@@ -36,7 +36,7 @@ public class ProfileUpdater {
 		
 		String groupId = mapr.getGroupId(p.getMyProfile().getServiceClass());
 		String artifactId = mapr.getArtifactId(p.getPackageName());
-		String version = mapr.getVersion(p.getVersion())+(isSnapshot ? "-SNAPSHOT" : "");
+		String version = mapr.getVersion(p.getVersion());
 		
 		try {
 			p.setMavenCoordinates(groupId, artifactId, version, null);
@@ -114,9 +114,6 @@ public class ProfileUpdater {
 				MappingsLoader.loadStaticMappings(staticMappingFile));
 
 		for (ProfilePackage p : profile.getPackages()) {
-			ProfileUpdater.addMavenCoordinates(p, mapr);
-			p.removeDependencies();
-			p.removeWSDLs();
 			
 			if(systemVersion != null){
 				String currentVersion = p.getVersion().toString();
@@ -128,6 +125,11 @@ public class ProfileUpdater {
 				if(!currentVersion.endsWith("-SNAPSHOT"))
 					p.setVersion(currentVersion + "-SNAPSHOT");
 			}
+			ProfileUpdater.addMavenCoordinates(p, mapr);
+			p.removeDependencies();
+			p.removeWSDLs();
+			
+
 		}
 		
 		//profile.setServiceVersion("1.0.0");
