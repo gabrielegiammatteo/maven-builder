@@ -26,6 +26,7 @@ import org.xml.sax.SAXException;
 public class ProfileUpdater {
 	
 	private static boolean isSnapshot = false;
+	private static String systemVersion = null;
 	
 	private static void printHelp(Options options) {
 		HelpFormatter formatter = new HelpFormatter();
@@ -37,6 +38,14 @@ public class ProfileUpdater {
 		String groupId = mapr.getGroupId(p.getMyProfile().getServiceClass());
 		String artifactId = mapr.getArtifactId(p.getPackageName());
 		String version = mapr.getVersion(p.getVersion());
+		
+		if(systemVersion != null){
+			version = version + "-" + systemVersion; 
+		}
+		
+		if(isSnapshot){
+			version = version + "-SNAPSHOT";
+		}
 		
 		try {
 			p.setMavenCoordinates(groupId, artifactId, version, null);
@@ -76,6 +85,10 @@ public class ProfileUpdater {
 		if(cmd.hasOption("s")){
 			isSnapshot = true;
 		}
+		
+		if(cmd.hasOption("m")){
+			systemVersion = cmd.getOptionValue("m");
+		}
 
 		
 		if(!cmd.hasOption("p")){
@@ -102,10 +115,8 @@ public class ProfileUpdater {
 			staticMappingFile = new File("staticMappings.json");
 		}
 		
-		String systemVersion = null;
-		if(cmd.hasOption("m")){
-			systemVersion = cmd.getOptionValue("m");
-		}
+
+		
 
 		Profile profile = Profile.parse(inputProfile);
 		
@@ -125,6 +136,7 @@ public class ProfileUpdater {
 				if(!currentVersion.endsWith("-SNAPSHOT"))
 					p.setVersion(currentVersion + "-SNAPSHOT");
 			}
+			
 			ProfileUpdater.addMavenCoordinates(p, mapr);
 			p.removeDependencies();
 			p.removeWSDLs();
