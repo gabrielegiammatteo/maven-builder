@@ -12,7 +12,9 @@
 },
 
 "dependencyScope": {
-	"jaxen:jaxen": "provided"
+	"jaxen:jaxen": "provided",
+	"org.slf4j:slf4j-api": "provided",
+	"org.slf4j:slf4j-log4j12": "provided"
 }
 
 }
