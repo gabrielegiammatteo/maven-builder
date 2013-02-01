@@ -181,7 +181,7 @@ execute_mvn(){
 		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$JAR_FILE $COORD_OPTS $CLASSIFIER $PACKAGING" 
 		
 		OUTPUT_FILE=gar_coord.txt
-		execute_PomGenerator --printcoord --nodeps $PROFILE_OPT $GROUPID_OPT $ARTIFACTID_OPT $VERSION_OPT $ARTIFACT_OPT -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE $PACKAGING_OPT $SYS_VERSION_OPT
+		execute_PomGenerator --printcoord --nodeps $PROFILE_OPT $GROUPID_OPT $ARTIFACTID_OPT $VERSION_OPT $ARTIFACT_OPT -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE $PACKAGING_OPT 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																			$SYS_VERSION_OPT
 		GROUP_ID=`cat $OUTPUT_FILE | grep "groupId" | sed 's/groupId=//'`
 		ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 		VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
