@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Exclusion;
 import org.gcube.buildutils.mavenizer.model.ProfilePackageDependency;
 import org.gcube.buildutils.mavenizer.model.version.ArtifactVersion;
 import org.gcube.buildutils.mavenizer.model.version.Range;
@@ -80,6 +81,18 @@ public class MappingRules {
 		if(getStaticMapping("dependencyScope", groupId+":"+artifactId) != null)
 			md.setScope(getStaticMapping("dependencyScope", groupId+":"+artifactId));
 		
+		
+		if(getStaticMapping("exclusions", groupId+":"+artifactId) != null){
+			String allExs = getStaticMapping("dependencyScope", groupId+":"+artifactId);
+			String[] exl = allExs.split(",");
+			for (int i = 0; i < exl.length; i++) {
+				String[] t = exl[i].split(":");
+				Exclusion ex = new Exclusion();
+				ex.setGroupId(t[0]);
+				ex.setArtifactId(t[1]);
+				md.addExclusion(ex);
+			}
+		}
 		
 		Set<Dependency> s = new HashSet<Dependency>();
 		s.add(md);
