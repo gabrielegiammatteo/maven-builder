@@ -75,6 +75,18 @@ public class MappingRules {
 		md.setArtifactId(artifactId);
 		md.setVersion(version);
 		
+		this.applyStaticMappingModifiers(md);
+		
+		Set<Dependency> s = new HashSet<Dependency>();
+		s.add(md);
+		return s;
+	}
+
+	private void applyStaticMappingModifiers(Dependency md){
+		
+		String groupId = md.getGroupId();
+		String artifactId = md.getArtifactId();
+		
 		if(getStaticMapping("dependencyType", groupId+":"+artifactId) != null)
 			md.setType(getStaticMapping("dependencyType", groupId+":"+artifactId));
 
@@ -83,7 +95,7 @@ public class MappingRules {
 		
 		
 		if(getStaticMapping("exclusions", groupId+":"+artifactId) != null){
-			String allExs = getStaticMapping("dependencyScope", groupId+":"+artifactId);
+			String allExs = getStaticMapping("exclusions", groupId+":"+artifactId);
 			String[] exl = allExs.split(",");
 			for (int i = 0; i < exl.length; i++) {
 				String[] t = exl[i].split(":");
@@ -92,13 +104,8 @@ public class MappingRules {
 				ex.setArtifactId(t[1]);
 				md.addExclusion(ex);
 			}
-		}
-		
-		Set<Dependency> s = new HashSet<Dependency>();
-		s.add(md);
-		return s;
+		}		
 	}
-
 
 	private Set<Dependency> getExternalDependency(String packageName, Range versionRange) {
 		
@@ -121,14 +128,7 @@ public class MappingRules {
 				Set<Dependency> depSet = new HashSet<Dependency>(this.externalsMappingMap.get(packageName).get(artifactVersion));
 				
 				for(Dependency d: depSet){
-					String artifactId = d.getArtifactId();
-					String groupId = d.getGroupId();
-					
-					if(getStaticMapping("dependencyType", groupId+":"+artifactId) != null)
-						d.setType(getStaticMapping("dependencyType", groupId+":"+artifactId));
-
-					if(getStaticMapping("dependencyScope", groupId+":"+artifactId) != null)
-						d.setScope(getStaticMapping("dependencyScope", groupId+":"+artifactId));					
+					this.applyStaticMappingModifiers(d);
 				}
 				
 				return depSet;
