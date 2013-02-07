@@ -1,6 +1,8 @@
 {
 "groupId": {
 	"VREManagement": "org.gcube.resourcemanagement",
+	"data-transformation": "org.gcube.data-transformation",
+	"DataTransformation": "org.gcube.data-transformation"
 },
 
 "dependencyType": {
@@ -19,7 +21,8 @@
 
 "exclusions": {
 	"eu.medsea.mimeutil:mime-util": "org.slf4j:slf4j-api,org.slf4j:slf4j-log4j12",
-	"com.googlecode.sli4j:sli4j-core": "org.slf4j:slf4j-api,org.slf4j:slf4j-log4j12"
+	"com.googlecode.sli4j:sli4j-core": "org.slf4j:slf4j-api,org.slf4j:slf4j-log4j12",
+	"com.hp.hpl.jena:jena": "xerces:xercesImpl,xerces:xmlParserAPIs"
 }
 
 }
