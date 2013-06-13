@@ -39,8 +39,7 @@ echo "[mvn-proxy]   MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR"
 echo "[mvn-proxy]   arguments: $@"
 
 GMVN_TMP_FILE='.gmvn_tmp'
-CLASSPATH=`cat $MAVENIZER_HOME/classpath.txt`:$MAVENIZER_HOME/target/classes
-
+CLASSPATH=`find $MAVENIZER_HOME/target -name '*.jar' -printf '%p:' | sed 's/:$//'`
 MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
 
 
