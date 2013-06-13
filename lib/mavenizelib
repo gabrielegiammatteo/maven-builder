@@ -7,7 +7,9 @@
 # 2012
 #
 
-CLASSPATH=`cat $MAVENIZER_HOME/classpath.txt`:$MAVENIZER_HOME/target/classes
+
+
+CLASSPATH=`find $MAVENIZER_HOME/target -name '*.jar' -printf '%p:' | sed 's/:$//'`
 
 log_debug() {
 	if [ ${FLAGS_loglevel} -ge 2 ]; then
