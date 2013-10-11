@@ -50,7 +50,8 @@ MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_R
 echo "[mvn-proxy] DEBUG: Removing not allowed versions of GWT (2.3.0, 2.4.0)"
 rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.3.0
 rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.4.0
-
+rm -rf $MAVEN_LOCAL_REPOSITORY/org/codehaus/mojo/gwt-maven-plugin/2.3.0
+rm -rf $MAVEN_LOCAL_REPOSITORY/org/codehaus/mojo/gwt-maven-plugin/2.4.0
 
 
 ######################
