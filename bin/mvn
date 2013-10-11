@@ -43,6 +43,15 @@ CLASSPATH=`find $MAVENIZER_HOME/target -name '*.jar' -printf '%p:' | sed 's/:$//
 MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
 
 
+#
+# removing old versions of gwt from local repo. This will forces Maven
+# to re-download those versions if needed by a component, making it possible
+# to detect it
+echo "[mvn-proxy] DEBUG: Removing not allowed versions of GWT (2.3.0, 2.4.0)"
+rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.3.0
+rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.4.0
+
+
 
 ######################
 # checks that ETICS version and pom version are consistent
