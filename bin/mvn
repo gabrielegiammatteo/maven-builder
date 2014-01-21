@@ -44,14 +44,19 @@ MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_R
 
 
 #
-# removing old versions of gwt from local repo. This will forces Maven
-# to re-download those versions if needed by a component, making it possible
-# to detect it
+# removing old versions of some components from local repo. This will forces
+# Maven to re-download those versions if needed by a component, making it
+# possible to detect it from logs
+
 echo "[mvn-proxy] DEBUG: Removing not allowed versions of GWT (2.3.0, 2.4.0)"
 rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.3.0
 rm -rf $MAVEN_LOCAL_REPOSITORY/com/google/gwt/gwt/2.4.0
 rm -rf $MAVEN_LOCAL_REPOSITORY/org/codehaus/mojo/gwt-maven-plugin/2.3.0
 rm -rf $MAVEN_LOCAL_REPOSITORY/org/codehaus/mojo/gwt-maven-plugin/2.4.0
+
+echo "[mvn-proxy] DEBUG: Removing not allowed versions of XStream (< 1.4)"
+rm -rf $MAVEN_LOCAL_REPOSITORY/com/thoughtworks/xstream/xstream/1.2*
+rm -rf $MAVEN_LOCAL_REPOSITORY/com/thoughtworks/xstream/xstream/1.3*
 
 
 ######################
