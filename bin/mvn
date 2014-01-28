@@ -27,7 +27,7 @@ EOF
 [ -z "$MAVEN_SETTINGS" ] && echo "[mvn-proxy] MAVEN_SETTINGS is not set. exiting..." && exit 1;
 [ -z "$MAVEN_LOCAL_REPOSITORY" ] && echo "[mvn-proxy] MAVEN_LOCAL_REPOSITORY is not set. exiting..." && exit 1;
 [[ "$MAVEN_BUILD_TYPE" != "development" && "$MAVEN_BUILD_TYPE" != "candidate" && "$MAVEN_BUILD_TYPE" != "release" ]] && echo "[mvn-proxy] MAVEN_BUILD_TYPE is not set or not valid (one in development|candidate|release is expected). exiting..." && exit 1;
-
+[ -z "$VERSION_REWRITES" ] && echo "[mvn-proxy] VERSION_REWRITES is not set. exiting..." && exit 1;
 
 echo "[mvn-proxy] environment:"
 echo "[mvn-proxy]   MAVEN_HOME=$MAVEN_HOME"
@@ -36,6 +36,7 @@ echo "[mvn-proxy]   MAVEN_LOCAL_REPOSITORY=$MAVEN_LOCAL_REPOSITORY"
 echo "[mvn-proxy]   MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE"
 echo "[mvn-proxy]   MAVEN_SYSTEM_VERSION=$MAVEN_SYSTEM_VERSION"
 echo "[mvn-proxy]   MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR"
+echo "[mvn-proxy]   VERSION_REWRITES=$VERSION_REWRITES"
 echo "[mvn-proxy]   arguments: $@"
 
 GMVN_TMP_FILE='.gmvn_tmp'
@@ -84,12 +85,12 @@ fi
 # updates versions
 #
 if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
-	bash -c "$MVN versions:use-latest-versions -DallowSnapshots=true -Dincludes=org.gcube*:*,org.gcore*:*"
+	bash -c "$MVN versions:use-latest-versions -DallowSnapshots=true -Dincludes=$VERSION_REWRITES"
 else
 	[ -n "$MAVEN_SYSTEM_VERSION" ] && ETICSLIB_MODULE_VERSION="$ETICSLIB_MODULE_VERSION-$MAVEN_SYSTEM_VERSION"
 	echo "[mvn-proxy] setting module version to : $ETICSLIB_MODULE_VERSION"
-	bash -c "$MVN versions:set -Dincludes=org.gcube*:*,org.gcore*:* -DnewVersion=$ETICSLIB_MODULE_VERSION"
-	bash -c "$MVN versions:use-latest-versions -Dincludes=org.gcube*:*,org.gcore*:*"
+	bash -c "$MVN versions:set -Dincludes=$VERSION_REWRITES -DnewVersion=$ETICSLIB_MODULE_VERSION"
+	bash -c "$MVN versions:use-latest-versions -Dincludes=$VERSION_REWRITES"
 fi
 
 CMDLINE="$MVN $@"

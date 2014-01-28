@@ -54,6 +54,7 @@ cat <<EOF
 [mavenize]     MAVEN_GCUBE_STAGING=$MAVEN_GCUBE_STAGING
 [mavenize]     MAVEN_SYSTEM_VERSION=$MAVEN_SYSTEM_VERSION
 [mavenize]     MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR
+[mavenize]     VERSION_REWRITES=$VERSION_REWRITES
 EOF
 
 
@@ -64,6 +65,7 @@ EOF
 [ -z "$MAVEN_SETTINGS" ] && log_fatal "MAVEN_SETTINGS is not set. exiting..." && exit 1;
 [ -z "$MAVEN_LOCAL_REPOSITORY" ] && log_fatal "MAVEN_LOCAL_REPOSITORY is not set. exiting..." && exit 1;
 [[ "$MAVEN_BUILD_TYPE" != "development" && "$MAVEN_BUILD_TYPE" != "candidate" && "$MAVEN_BUILD_TYPE" != "release" ]] && log_fatal "MAVEN_BUILD_TYPE is not set or not valid (one in development|candidate|release is expected). exiting..." && exit 1;
+[ -z "$VERSION_REWRITES" ] && echo "VERSION_REWRITES is not set. exiting..." && exit 1;
 
 
 ######################
@@ -149,9 +151,9 @@ fi
 #
 MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
 if [[ "$MAVEN_BUILD_TYPE" == "development" ]]; then
-	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -DallowSnapshots=true -Dincludes=org.gcube*:*,org.gcore*:*"
+	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -DallowSnapshots=true -Dincludes=$VERSION_REWRITES"
 else
-	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -Dincludes=org.gcube*:*,org.gcore*:*"
+	bash -c "$MVN -f $POM_FILE versions:use-latest-versions -Dincludes=$VERSION_REWRITES"
 fi
 
 
