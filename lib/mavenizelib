@@ -180,7 +180,7 @@ execute_mvn(){
 		#TODO: check no multiple files are returned or no files
 		#this should never happen because each gar contains exactly one jar in lib/
 	
-		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$JAR_FILE $COORD_OPTS $CLASSIFIER $PACKAGING" 
+		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL $MVN_ADDITIONAL_OPTS -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$JAR_FILE $COORD_OPTS $CLASSIFIER $PACKAGING" 
 		
 		OUTPUT_FILE=gar_coord.txt
 		execute_PomGenerator --printcoord --nodeps $PROFILE_OPT $GROUPID_OPT $ARTIFACTID_OPT $VERSION_OPT $ARTIFACT_OPT -e $MAVENIZER_HOME/etc/externalsMapping.json -t $MAVENIZER_HOME/etc/staticMappings.json $snapshotFlag -o $OUTPUT_FILE $PACKAGING_OPT 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																			$SYS_VERSION_OPT
@@ -188,11 +188,11 @@ execute_mvn(){
 		ARTIFACT_ID=`cat $OUTPUT_FILE | grep "artifactId" | sed 's/artifactId=//'`
 		VERSION=`cat $OUTPUT_FILE | grep "version" | sed 's/version=//'`
 		
-		GAR_MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 -DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION -Dpackaging=gar -Dtypes=gar -DgeneratePom=false" 
+		GAR_MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL $MVN_ADDITIONAL_OPTS -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 -DgroupId=$GROUP_ID -DartifactId=$ARTIFACT_ID -Dversion=$VERSION -Dpackaging=gar -Dtypes=gar -DgeneratePom=false" 
 		cd $OLDDIR
 		
 	else
-		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 $COORD_OPTS $CLASSIFIER $PACKAGING" 	
+		MVN_OPTIONS="-B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_GOAL $MVN_ADDITIONAL_OPTS -Durl=$maven_repo_url -DrepositoryId=$maven_repo_id -Dfile=$1 $COORD_OPTS $CLASSIFIER $PACKAGING" 	
 	fi
 	
 	if [ ${FLAGS_loglevel} -ge 2 ]; then

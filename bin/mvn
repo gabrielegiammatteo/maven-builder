@@ -37,11 +37,12 @@ echo "[mvn-proxy]   MAVEN_BUILD_TYPE=$MAVEN_BUILD_TYPE"
 echo "[mvn-proxy]   MAVEN_SYSTEM_VERSION=$MAVEN_SYSTEM_VERSION"
 echo "[mvn-proxy]   MAVENIZER_FAIL_ON_ERROR=$MAVENIZER_FAIL_ON_ERROR"
 echo "[mvn-proxy]   VERSION_REWRITES=$VERSION_REWRITES"
+echo "[mvn-proxy]   MVN_ADDITIONAL_OPTS=$MVN_ADDITIONAL_OPTS"
 echo "[mvn-proxy]   arguments: $@"
 
 GMVN_TMP_FILE='.gmvn_tmp'
 CLASSPATH=`find $MAVENIZER_HOME/target -name '*.jar' -printf '%p:' | sed 's/:$//'`
-MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY"
+MVN="$MAVEN_HOME/bin/mvn -B -s $MAVEN_SETTINGS -Dmaven.repo.local=$MAVEN_LOCAL_REPOSITORY $MVN_ADDITIONAL_OPTS"
 
 
 #
